@@ -14,28 +14,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: '17'
+          cache: gradle
 
-      - name: Install Android SDK
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y android-sdk
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Configure SDK
-        run: |
-          echo "sdk.dir=/usr/lib/android-sdk" > local.properties
-          yes | sudo /usr/lib/android-sdk/cmdline-tools/bin/sdkmanager --licenses || true
+      - name: Configure local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-      - name: Build APK
-        run: |
-          gradle :app:assembleDebug --stacktrace
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.9
+
+      - name: Build debug APK
+        run: gradle :app:assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: whos-the-killer-v0.5.0
+          name: whos-the-killer-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
