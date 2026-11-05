@@ -21,19 +21,22 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Install Android SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y android-sdk
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 8.9
+      - name: Configure SDK
+        run: |
+          echo "sdk.dir=/usr/lib/android-sdk" > local.properties
+          yes | sudo /usr/lib/android-sdk/cmdline-tools/bin/sdkmanager --licenses || true
 
       - name: Build APK
-        run: gradle assembleDebug --stacktrace
+        run: |
+          gradle --version
+          gradle assembleDebug --stacktrace
 
       - name: Upload APK
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: whos-the-killer-v0.5.0
